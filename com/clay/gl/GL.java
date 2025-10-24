@@ -9,9 +9,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public final class GL {
 
@@ -57,6 +55,7 @@ public final class GL {
     public static final int NAVY = 0xFF000080;
     public static final int PURPLE = 0xFF800080;
     public static final int ORANGE = 0xFFFFA500;
+    public static final int PINK = 0xFFFFC0CB;
 
     public static final int KEY_ENTER = KeyEvent.VK_ENTER;
     public static final int KEY_BACK_SPACE = KeyEvent.VK_BACK_SPACE;
@@ -238,12 +237,7 @@ public final class GL {
     private static int mousewheelrotation = 0;
     private static int mousescrollwheelrotation = 0;
 
-    /*
-    private static String modifyName = "name";
-    private static String modifyType = "type";
-    private static String modifyValues = "values";
-    private static ArrayList<String> modifyData = new ArrayList<String>(); // [name], [type], [values]
-     */
+    private static Map<String, Object> modifyData = new HashMap<>();
 
     public static void initgraph() {
         window();
@@ -366,6 +360,7 @@ public final class GL {
         frame.setLocation(x, y);
         frame.setVisible(true);
 
+        modifyData.clear();
     }
 
     private static void createbuffer() {
@@ -389,12 +384,38 @@ public final class GL {
         return height;
     }
 
+    public static void modify(String ... values) {
+        if (values.length == 0) return;
+        for (String val : values) {
+            if (val.contains("=")) {
+                String variable = val.substring(0, val.indexOf("=")).trim();
+                Object value = val.substring(val.indexOf("=") + 1, val.length()).trim();
+                modifyData.put(variable, value);
+            } else if (val.contains(":")) {
+                String variable = val.substring(0, val.indexOf(":")).trim();
+                Object value = val.substring(val.indexOf(":") + 1, val.length()).trim();
+                modifyData.put(variable, value);
+            }
+        }
+    }
+
+    private static Object getmodify(String type) {
+        if (modifyData.isEmpty() || !modifyData.containsKey(type) || type.equals("")) return null;
+        return modifyData.get(type);
+    }
+
     public static void setscale(double scale) {
+        Object value = getmodify("scale");
+        if (value != null) scale = (double) value;
         GL.scalex = scale;
         GL.scaley = scale;
     }
 
     public static void setscale(double sx, double sy) {
+        Object scalex = getmodify("scalex");
+        Object scaley = getmodify("scaley");
+        if (scalex != null) sx = (double) scalex;
+        if (scaley != null) sy = (double) scaley;
         GL.scalex = sx;
         GL.scaley = sy;
     }
@@ -449,15 +470,6 @@ public final class GL {
         } catch (InterruptedException e) {}
         return frame.isVisible();
     }
-
-    /*
-    public static void modify(String name, String type, String values) {
-        GL.modifyName = name;
-        GL.modifyType = type;
-        GL.modifyValues = values;
-        GL.modifyData.add("[" + name + "], [" + type + "], [" + values + "]");
-    }
-     */
 
     public static void setstrokewidth(float stroke) {
         GL.strokewidth = stroke;
